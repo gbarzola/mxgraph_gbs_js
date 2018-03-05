@@ -1,0 +1,548 @@
+<html>
+<head>
+	
+
+	<!-- Establece el camino base para la biblioteca si no está en el mismo directorio -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="mxClient.js"></script>
+
+	<!-- Example code -->
+	<script type="text/javascript">
+		// El programa comienza aquí. Crea un gráfico de muestra en el
+		// Nodo DOM con la ID especificada. Esta función se invoca
+		// desde el controlador de eventos "onLoad" del documento (ver a continuación).
+		function main()
+		{
+			// Define un icono para crear nuevas conexiones en el controlador de conexión.
+			// Esto desactivará automáticamente el resaltado del vértice de origen.
+			
+			// Para instalar la imagen, al campo connectImage de mxConnectionHandler
+			// se le debe asignar una nueva instancia de mxImage:
+			// mxConnectionHandler.prototype.connectImage = new mxImage('images/green-dot.gif', 14, 14);
+			
+			//Esto usará 'green-dot.gif' con un ancho y alto de 14 píxeles como la imagen
+			//para activar nuevas conexiones. En createIcons, el campo del icono del controlador
+			// se configurará para recordar el ícono en el que se ha hecho clic para crear la 
+			//nueva conexión. Este campo estará disponible en selectedIcon en el método de conexión,
+			//que puede ser anulado para tomar en cuenta el ícono que activó la nueva conexión.
+			//Esto es útil si se puede usar más de un ícono para crear una conexión.
+			
+			mxConnectionHandler.prototype.connectImage = new mxImage('images/connector.gif', 16, 16);
+		
+			// Comprueba si el navegador es compatible
+			if (!mxClient.isBrowserSupported())
+			{
+				// Muestra un mensaje de error si el navegador no es compatible
+				mxUtils.error('Navegador no es compatible!', 200, false);
+			}
+			else
+			{
+				// Crea el 'div' para la barra de herramientas
+				var tbContainer = document.createElement('div');
+				tbContainer.style.position = 'absolute';
+				tbContainer.style.overflow = 'hidden';
+				tbContainer.style.padding = '2px';
+				tbContainer.style.left = '0px';
+				tbContainer.style.top = '26px';
+				tbContainer.style.width = '46px';
+				tbContainer.style.bottom = '0px';
+				
+				document.body.appendChild(tbContainer);
+			
+				// Crea el 'div' para el gráfico
+				container = document.createElement('div');
+				container.style.position = 'absolute';
+				container.style.overflow = 'hidden';
+				container.style.left = '50px';
+				container.style.top = '26px';
+				container.style.right = '0px';
+				container.style.bottom = '0px';
+				container.style.background = 'url("images/grid.gif")';
+
+				document.body.appendChild(container);
+				
+				// Crea una nueva barra de herramientas sin procesamiento de eventos
+				
+				// mxDefaultToolbar : Barra de herramientas para el editor.
+				// Esto modifica el estado del gráfico o inserta nuevas celdas al 
+				// hacer clic con el mouse.
+				// Function mxDefaultToolbar(container,editor)
+				// editor : referencia a mxEditor
+				
+				// mxToolbar : Crea una barra de herramientas dentro de un DOM.
+				// La barra de herramientas puede contener iconos, botones y cuadros combinados.
+				// function mxToolbar(container)
+				
+				var toolbar = new mxDefaultToolbar(tbContainer, null);
+				var toolbar = new mxToolbar(tbContainer);
+				toolbar.enabled = false
+			    
+				// Solución para que Internet Explorer ignore ciertos estilos
+				if (mxClient.IS_QUIRKS)
+				{
+					document.body.style.overflow = 'hidden';
+					new mxDivResizer(tbContainer);
+					new mxDivResizer(container);
+				}
+	
+				// Crea el modelo y el gráfico dentro del contenedor
+				// utilizando la representación más rápida disponible en el navegador
+				
+				// function mxGraphModel(root)
+				// root : Soporta la celda raíz, que a su vez contiene las celdas 
+				// que representan las capas del diagrama como celdas secundarias.
+				
+				// function mxGraph(container,model,renderHint,stylesheet)
+				
+				// function mxUndoManager(size)
+				// size : Tamaño máximo del historial de comandos
+				
+				var model = new mxGraphModel();
+				var graph = new mxGraph(container, model);
+				var undoManager = new mxUndoManager();
+				
+				// El código crea una función que informa al undoManager de una edición 
+				// anulable y la vincula al evento de deshacer de mxGraphModel y mxGraphView 
+				// usando mxEventSource.addListener.
+				
+			    var listener = function(sender, evt)
+                {
+                  undoManager.undoableEditHappened(evt.getProperty('edit'));
+                };
+                graph.getModel().addListener(mxEvent.UNDO, listener);
+                graph.getView().addListener(mxEvent.UNDO, listener);
+				graph.dropEnabled = true;
+				
+				graph.popupMenuHandler.factoryMethod = function(menu, cell, evt){
+		             return createPopupMenu(graph, menu, cell, evt);
+				};
+				
+				createPopupMenu = function(graph, menu, cell, evt) {
+				    menu.addItem('cut ', 'images/cut.gif', function() { cut(); });
+				    menu.addItem('copy ', 'images/copy.gif', function() { copy(); });
+				    menu.addItem('paste ', 'images/paste.gif', function() { paste(); });
+				    menu.addItem('property ', 'images/paste.gif', function() { 
+				    	console.log(cell);
+				      	var table = document.createElement('table');
+				      	
+				      	var tr = document.createElement('tr');
+				      	var td1 = document.createElement('td');
+				      	var td2 = document.createElement('td');
+				      	var label = document.createElement('label');
+						label.innerText = "Id"
+						var input = document.createElement('input');
+						input.id = "id";
+						input.value = cell.id;
+				      	td1.appendChild(label);
+				      	td2.appendChild(input);
+				      	tr.appendChild(td1);
+				      	tr.appendChild(td2);
+				      	table.appendChild(tr)
+				      		
+				      	var tr = document.createElement('tr');
+				      	var td1 = document.createElement('td');
+				      	var td2 = document.createElement('td');
+				      	var label = document.createElement('label');
+						label.innerText = "Top"
+						var input = document.createElement('input');
+						input.id = "top";
+						input.value = cell.geometry.y; 
+	      				td1.appendChild(label);
+	      				td2.appendChild(input);
+		      			tr.appendChild(td1);
+		      			tr.appendChild(td2);
+			      		table.appendChild(tr)
+				      		
+			      		var tr = document.createElement('tr');
+	      				var td1 = document.createElement('td');
+	      				var td2 = document.createElement('td');
+						var label = document.createElement('label');
+						label.innerText = "Left"
+						var input = document.createElement('input');
+						input.id = "left";
+						input.value = cell.geometry.x; 
+	      				td1.appendChild(label);
+	      				td2.appendChild(input);
+		      			tr.appendChild(td1);
+		      			tr.appendChild(td2);
+			      		table.appendChild(tr)
+				      		
+				      	var tr = document.createElement('tr');
+				      	var td1 = document.createElement('td');
+				      	var td2 = document.createElement('td');
+				      	var label = document.createElement('label');
+						label.innerText = "Width"
+						var input = document.createElement('input');
+						input.id = "width";
+				      	input.value = cell.geometry.width;
+				      	td1.appendChild(label);
+				      	td2.appendChild(input);
+				      	tr.appendChild(td1);
+				      	tr.appendChild(td2);
+				      	table.appendChild(tr)
+				      		
+				      	var tr = document.createElement('tr');
+				      	var td1 = document.createElement('td');
+				      	var td2 = document.createElement('td');
+				      	var label = document.createElement('label');
+						label.innerText = "Height"
+						var input = document.createElement('input');
+						input.id = "height";
+						input.value = cell.geometry.height;
+		  				td1.appendChild(label);
+		  				td2.appendChild(input);
+		      			tr.appendChild(td1);
+		      			tr.appendChild(td2);
+			      		table.appendChild(tr)
+				      		
+				      			var tr = document.createElement('tr');
+				      				var td1 = document.createElement('td');
+				      				var td2 = document.createElement('td');
+				      						var label = document.createElement('label');
+												label.innerText = "Style"
+											var input = document.createElement('input');
+												input.id = "style";
+												input.value = cell.style;
+				      							
+				      				td1.appendChild(label);
+				      				td2.appendChild(input);
+				      			tr.appendChild(td1);
+				      			tr.appendChild(td2);
+				      		table.appendChild(tr)
+				      		
+				      			var tr = document.createElement('tr');
+				      				var td1 = document.createElement('td');
+				      				var td2 = document.createElement('td');
+				      						var label = document.createElement('label');
+												label.innerText = "label"
+											var input = document.createElement('textarea');
+												input.id = "label";
+				      							input.value = cell.value
+				      				td1.appendChild(label);
+				      				td2.appendChild(input);
+				      			tr.appendChild(td1);
+				      			tr.appendChild(td2);
+				      		table.appendChild(tr)
+				      		
+						
+							var tr = document.createElement('tr');
+				      				var td1 = document.createElement('td');
+				      				var td2 = document.createElement('td');
+				      						var label = document.createElement('label');
+												label.innerText = "Description"
+											var input = document.createElement('input');
+												input.id = "description";
+				      				
+				      				td1.appendChild(label);
+				      				td2.appendChild(input);
+				      			tr.appendChild(td1);
+				      			tr.appendChild(td2);
+				      		table.appendChild(tr)
+				      		
+				      		var tr = document.createElement('tr');
+				      				var td1 = document.createElement('td');
+				      				var td2 = document.createElement('td');
+				      						var label = document.createElement('label');
+												label.innerText = "Href"
+											var input = document.createElement('input');
+												input.id = "href";
+				      				
+				      				td1.appendChild(label);
+				      				td2.appendChild(input);
+				      			tr.appendChild(td1);
+				      			tr.appendChild(td2);
+				      		table.appendChild(tr)
+				      		
+				      		var tr = document.createElement('tr');
+				      				var td1 = document.createElement('td');
+				      				var td2 = document.createElement('td');
+				      						var buttonOK = document.createElement('button');
+				      						buttonOK.innerText = "OK";
+				      						buttonOK.onclick  = function(){
+				      								graph.getModel().beginUpdate();
+				      								try{
+				      									cell.id  = document.getElementById("id").value;
+				      								     var geometry = cell.getGeometry();
+				      								     //geometry.x = document.getElementById("left").value;
+														 geometry.y  = document.getElementById("top").value;
+														 geometry.x  = document.getElementById("left").value;
+													     geometry.width  = document.getElementById("width").value;
+														 geometry.height  = document.getElementById("height").value;
+														 cell.setGeometry(geometry);
+														cell.setStyle(document.getElementById("style").value);
+														graph.model.setValue(cell, document.getElementById("label").value);
+														
+				      									
+				      								}
+				      								finally{
+				      									graph.getModel().endUpdate();
+				      								}
+													wnd.setVisible(false);
+													var myNode = document.getElementById("property");
+														while (myNode.firstChild) {
+														    myNode.removeChild(myNode.firstChild);
+													}
+													
+											};	
+				      			
+											var buttonCancle = document.createElement('button');
+											buttonCancle.innerText = "Cancel";
+											buttonCancle.onclick  = function(){
+													wnd.setVisible(false);
+													var myNode = document.getElementById("property");
+														while (myNode.firstChild) {
+														    myNode.removeChild(myNode.firstChild);
+														}
+													
+													
+													
+											};	
+				      			
+				      				td2.appendChild(buttonOK);
+				      				td2.appendChild(buttonCancle);
+				      			tr.appendChild(td1);
+				      			tr.appendChild(td2);
+				      		table.appendChild(tr)
+				      		if(!document.getElementById("property")){
+				      			var content = document.createElement('div');
+				      		}else{
+				      			var content = document.getElementById("property")
+				      		}
+					
+						    content.id = "property"
+							content.appendChild(table);
+							//mxUtils.write(content, )
+							
+							wnd = new mxWindow('Properties', content, 300, 50, 200, null, false, false);
+							wnd.setMaximizable(true);
+							wnd.setScrollable(true);
+							wnd.setResizable(true);
+							wnd.setVisible(true);
+				      });
+				      
+				    
+				
+				  }
+				
+				// getDropTarget: Devuelve el destino de caída para el gráfico y las coordenadas dados.
+				// Esta implementación usa mxGraph.getCellAt
+				// mxDragSource.prototype.getDropTarget = function(graph,x,y,evt)
+				
+				// getCellAt: Devuelve la celda inferior que cruza el punto dado (x, y) 
+				// en la jerarquía de la celda comenzando en el padre dado.
+				// mxGraph.prototype.getCellAt = function(x,y,parent,vertices,edges,ignoreFn)
+				
+				// isValidDropTarget : Devuelve verdadero si la celda dada es un destino válido para las celdas especificadas. 
+				mxDragSource.prototype.getDropTarget = function(graph, x, y)
+				{
+					var cell = graph.getCellAt(x, y);
+					
+					if (!graph.isValidDropTarget(cell))
+					{
+						cell = null;
+					}
+					
+					return cell;
+				};
+
+				// Habilita nuevas conexiones en el gráfico
+				// setMultigraph : Especifica si el gráfico debe permitir conexiones múltiples
+				// entre el mismo par de vértices.
+				graph.setMultigraph(false);
+
+				// Detiene la edición al ingresar o al salir de la tecla de acceso
+				var keyHandler = new mxKeyHandler(graph);
+				var rubberband = new mxRubberband(graph);
+				
+				// mxCell : Construye una nueva celda para ser utilizada en un modelo de gráfico
+				// function mxCell(value,geometry,style)
+				// mxGeometry : Construye un nuevo objeto para describir el tamaño
+				// y la ubicación de un vértice o los puntos de control de un borde.
+				// function mxGeometry(x,y,width,height)
+				// setVertex : Especifica si la celda es un vértice. Esto solo debe 
+				// asignarse en la construcción de la celda y no debe cambiarse
+				// durante su ciclo de vida.
+				
+				var addVertex = function(icon, w, h, style)
+				{
+					var vertex = new mxCell(null, new mxGeometry(0, 0, w, h), style);
+					vertex.setVertex(true);
+				
+					addToolbarItem(graph, toolbar, vertex, icon);
+				};
+				
+				// undoManager : Construye un nuevo administrador de deshacer con el tamaño de historial 
+				// mxClipboard : Singleton que implementa un portapapeles para celdas de gráfico.
+				// setConnectable : Especifica si el gráfico debería permitir nuevas conexiones.
+				// getStylesheet : Retorna el mxStylesheet que define el estilo.
+				
+				var undo = function(){
+				  undoManager.undo();
+				};
+				var redo = function(){
+				  undoManager.redo();
+				};
+				var copy = function(){
+				  mxClipboard.copy(graph);
+				};
+				var paste = function(){
+				  mxClipboard.paste(graph);
+				};
+				var cut = function(){
+				  mxClipboard.cut(graph);
+				};
+				var removeCells = function(){
+				  mxClipboard.removeCells(graph);
+				};
+				
+				var allowConnection = function(){
+                    graph.setConnectable(!graph.isConnectable());
+				};
+                var allowConnectionOrth = function(){
+                    graph.setConnectable(!graph.isConnectable());
+                    
+                    if(graph.isConnectable()){
+                        graph.getStylesheet().getDefaultEdgeStyle()['edgeStyle'] = 'orthogonalEdgeStyle';
+                    }
+				};
+
+				
+			
+				addVertex('images/save.gif', 120, 160, 'shape=swimlane;startSize=20;');
+				addVertex('images/preview.gif', 100, 40, '');
+				addVertex('images/print.gif', 100, 40, 'shape=rounded');
+				addVertex('images/image.gif', 40, 40, 'shape=ellipse');
+				toolbar.addLine();
+				addVertex('images/select.gif', 120, 160, 'shape=select;startSize=20;');
+				toolbar.addItem('orthogonal','images/vertical.gif',allowConnectionOrth,'images/vertical.gif');
+			    toolbar.addItem('straight','images/straight.gif',allowConnection,'images/straight.gif');
+			
+				addVertex('images/pan.gif', 40, 40, 'shape=pan');
+
+				toolbar.addLine();
+				toolbar.addItem('undu','images/undo.gif',undo,'images/undo.gif');
+				toolbar.addItem('redo','images/redo.gif',redo,'images/redo.gif');
+			
+				toolbar.addLine();
+				toolbar.addItem('cut','images/cut.gif',cut,'images/copy.gif');
+				toolbar.addItem('copy','images/copy.gif',copy,'images/copy.gif');
+				toolbar.addItem('paste','images/paste.gif',paste,'images/paste.gif');
+				toolbar.addItem('removeCells','images/delete.gif',removeCells,'images/delete.gif');
+				
+				
+				toolbar.addLine();
+				addVertex('images/group.gif', 100, 40, 'shape=straight');
+				addVertex('images/ungroup.gif', 40, 40, 'shape=pan');
+				toolbar.addLine();
+				addVertex('images/swimlane.gif', 120, 160, 'shape=swimlane;startSize=20;');
+				addVertex('images/rectangle.gif', 100, 40, 'shape=rectangle');
+				addVertex('images/rounded.gif', 100, 40, 'shape=rounded');
+				addVertex('images/ellipse.gif', 40, 40, 'shape=ellipse');
+				addVertex('images/rhombus.gif', 40, 40, 'shape=rhombus');
+				addVertex('images/triangle.gif', 40, 40, 'shape=triangle');
+				addVertex('images/cylinder.gif', 40, 40, 'shape=cylinder');
+				addVertex('images/actor.gif', 30, 40, 'shape=actor');
+				toolbar.addLine();
+				
+				addVertex('images/symbols/small_event.gif', 40, 40, 'shape=small_event');
+				addVertex('images/symbols/small_event_intermediate.gif', 40, 40, 'shape=triangle');
+				addVertex('images/symbols/small_event_end.gif', 40, 40, 'shape=cylinder');
+				addVertex('images/symbols/small_timer.gif', 30, 40, 'shape=small_timer');
+				addVertex('images/symbols/small_message.gif', 40, 40, 'shape=rhombus');
+				addVertex('images/symbols/small_message_intermediate.gif', 40, 40, 'shape=triangle');
+				addVertex('images/symbols/small_link.gif', 40, 40, 'shape=cylinder');
+				addVertex('images/symbols/small_rule.gif', 30, 40, 'shape=actor');
+				addVertex('images/symbols/small_multiple.gif', 40, 40, 'shape=rhombus');
+				addVertex('images/symbols/small_error.gif', 40, 40, 'shape=triangle');
+				addVertex('images/symbols/small_cancel_end.gif', 40, 40, 'shape=cylinder');
+				addVertex('images/symbols/small_cancel_intermediate.gif', 30, 40, 'shape=actor');
+				addVertex('images/symbols/small_fork.gif', 40, 40, 'shape=rhombus');
+				addVertex('images/symbols/small_merge.gif', 40, 40, 'shape=triangle');
+				addVertex('images/symbols/small_inclusive.gif', 40, 40, 'shape=cylinder');
+				toolbar.addLine();
+				
+				
+				addVertex('images/zoom.gif', 120, 160, 'shape=swimlane;startSize=20;');
+				addVertex('images/zoomin.gif', 100, 40, 'shape=rectangle');
+				addVertex('images/zoomout.gif', 100, 40, 'shape=rounded');
+				addVertex('images/zoomactual.gif', 40, 40, 'shape=ellipse');
+				addVertex('images/zoom.gif', 40, 40, 'shape=rhombus');
+				toolbar.addLine();
+				
+				addVertex('images/outline.gif', 40, 40, 'shape=triangle');
+				addVertex('images/tasks.gif', 40, 40, 'shape=cylinder');
+				addVertex('images/help.gif', 30, 40, 'shape=actor');
+				addVertex('images/console.gif', 30, 40, 'shape=actor');
+				toolbar.addLine();
+				
+				
+				var button = mxUtils.button('Create toolbar entry from selection', function(evt)
+				{
+					if (!graph.isSelectionEmpty())
+					{
+						// Creates a copy of the selection array to preserve its state
+						var cells = graph.getSelectionCells();
+						var bounds = graph.getView().getBounds(cells);
+						
+						// Function that is executed when the image is dropped on
+						// the graph. The cell argument points to the cell under
+						// the mousepointer if there is one.
+						var funct = function(graph, evt, cell)
+						{
+							graph.stopEditing(false);
+			
+							var pt = graph.getPointForEvent(evt);
+							var dx = pt.x - bounds.x;
+							var dy = pt.y - bounds.y;
+							
+							graph.setSelectionCells(graph.importCells(cells, dx, dy, cell));
+						}
+			
+						// Creates the image which is used as the drag icon (preview)
+						var img = toolbar.addMode(null, 'images/outline.gif', funct);
+						mxUtils.makeDraggable(img, graph, funct);
+					}
+				});
+
+				button.style.position = 'absolute';
+				button.style.left = '2px';
+				button.style.top = '2px';
+				
+				document.body.appendChild(button);
+			}
+		}
+
+		function addToolbarItem(graph, toolbar, prototype, image)
+		{
+			// Function that is executed when the image is dropped on
+			// the graph. The cell argument points to the cell under
+			// the mousepointer if there is one.
+			var funct = function(graph, evt, cell)
+			{
+				graph.stopEditing(false);
+
+				var pt = graph.getPointForEvent(evt);
+				var vertex = graph.getModel().cloneCell(prototype);
+				vertex.geometry.x = pt.x;
+				vertex.geometry.y = pt.y;
+				
+				graph.setSelectionCells(graph.importCells([vertex], 0, 0, cell));
+			}
+
+			// Creates the image which is used as the drag icon (preview)
+			var img = toolbar.addMode(null, image, funct);
+			mxUtils.makeDraggable(img, graph, funct);
+		}
+
+	</script>
+</head>
+
+<!-- Llama a la función principal después de que la página se haya cargado. 
+     El contenedor se crea dinámicamente. -->
+<body onload="main();">
+</body>
+</html>
